@@ -1,0 +1,179 @@
+      SDLC of Meera
+
+1.Planning
+    *Goal-Create a web-based Fullstack E-commerce application system that allows users to look on different sorts of clothes and dressings there and  make informative and rational decision after visiting the whole market just with their phone.It is an app thAT makes the life pf user easier and trustworthy. Boutiqe Owners can manage postings of commerce tools,update and create the profile of their shop.
+    *Scope: Online E-commerce with applicant accounts(user),Busstation profile and dashbpard dashboard and  admin dashboard.
+    *Problems it solves:--information gap between user and seller.reduce cost which was spent on searching jobs on magazines ,bulletin boards,and frequent visits to office
+    *Timeline:Max of 1 months
+    *Group Members and Role(1 Full stack developers)
+
+
+2.Reaquirement Anlaysis
+    2.1:Functional requirements:
+
+           war-stratagy
+
+    2.2: Non-Functional Requirements:
+            -Secure authentication.
+            -System should handle at least 500 concurrent users.
+
+3.Design:
+        ____cleien-server architecture
+        -Folder Structure
+                    .
+                    └── Meera/
+                        ├── Client/
+                        |    |── package.json
+                        |    ├── package_lock.json
+                        |   ├── server.js
+                        |    └── nodemodules/
+                            └── node_modules list
+                        │   
+                        │   
+                        │  
+                        │   
+                        │       
+                        ├── Server/
+                        │   
+                            ├── package.json
+                            ├── package_lock.json
+                            ├── server.js
+                            └── nodemodules/
+                            └── node_modules list
+                        |---SDLC.txt
+                        |---Doc.txt
+                        
+        Database Design
+                   
+
+                    ---
+
+                    ## **1. Users & Authentication**
+
+            
+
+                    **Relationships:**
+
+                    * One `user` → One `profile`
+                    * One `user` → Many `orders`
+
+                    ---
+
+                    ## **2. Products & Catalog**
+
+                    
+
+
+
+                    * **categories**
+
+                    **Relationships:**
+
+                    * One product → Many images
+                    * One product → Many categories (M\:N through `product_categories`)
+
+                    ---
+
+                    ## **3. Shopping Cart**
+
+                    
+                    **Relationships:**
+
+                    * One `cart` → Many `cart_items`
+                    * One `user` → One active `cart`
+
+                    ---
+
+                    ## **4. Orders**
+
+                    * **orders**
+
+                   
+
+                    **Relationships:**
+
+                    * One `order` → Many `order_items`
+                    * One `user` → Many `orders`
+
+                    
+
+                    5. Payments
+
+                    Relationships:
+
+                     One `order` → One `payment
+
+                    
+
+                    6. Reviews & Ratings*
+
+                   Relationships:
+
+                    * One product → Many reviews
+                    * One user → Many reviews
+
+                    
+
+                    7. Notifications
+
+                    
+                    Entity Relationship Diagram (Simplified)**
+
+                    Users ──< Orders ──< Order_Items >── Products >── Product_Images
+                    │         │
+                    │         └── Payments
+                    │
+                    └── Carts ──< Cart_Items
+                    │
+                    └── Reviews >── Products
+                    ```
+
+
+
+4.Development:
+            Backend:Node.js + Express
+            Front-end:React
+            Database:PostgreSql
+            .
+            .
+            .
+            
+5.Testing:
+        Unit testing:(for Login,sign up.....etc with correct and wrong credentials)
+        Integration testing:Checking whether the buttons correctly function CRUD operations
+        system Testing:Postman for the back end and firebase(optional) for the frontend
+        UAT:Employers role testign whether they could post and delete jobs
+
+
+
+6.Deployment: 
+        The work will be deployed with vercel(front end and render -backend)
+
+7.Maintainance:
+        WE maintain the system based on our professional view and user expreience(feed back from users) during and after deployemnt.For now the supposed maintainance types are: 
+            -Corrective: Fixed bugs
+
+            Adaptive: Updated to support mobile responsiveness,cross platforms,different web browsers(chrome,edge,brav..etc)
+
+            Perfective:Like Adding AI-based job recommendation for applicants.
+
+
+
+
+
+
+
+
+Time Frame work
+
+            planning and Design,landing page Authentication (1week)
+
+            filter/search,sort,product detail view
+            review & Ratings
+            Notification  ,  wishlist/like              (1 week)
+
+crud for boutique ,offers  ,and Payments
+list of boutiqe and users with crud,paid upaid flag  (1week)
+
+
+                                                                    
