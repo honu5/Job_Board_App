@@ -68,3 +68,11 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
 }
+
+
+
+model RevokedToken{
+  id Int @id @default(autoincrement())
+  token String @unique
+  revokedAt DateTime @default(now())
+}

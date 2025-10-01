@@ -1,10 +1,11 @@
 import {prisma} from '../config/db.js';
+import bcrypt from 'bcrypt';
 
 async function main() {
-  prisma.user.createMany({
-    data : [{name : 'Amare Hagos' , email:'amare@gmail.com', password:'12345'},
-            {name : 'Ayele Hagos' , email:'ayele@gmail.com', password:'12345'},
-            {name : 'Aschu Hagos' , email:'aschu@gmail.com', password:'12345'}]
+  await prisma.user.createMany({
+    data : [{name : 'Dinakayehu' , password:await bcrypt.hash('dinkex@gmail.com',10), email:'dinkex@gmail.com'},
+            {name : 'Temesgen' , password:await bcrypt.hash('teme@gmail.com',10), email:'teme@gmail.com'},
+            {name : 'Habtamu' , password:await bcrypt.hash('habte@gmail.com',10), email:'habte@gmail.com'}]
   })
 }
 
