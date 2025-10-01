@@ -3,8 +3,12 @@ import { prisma } from '../config/db.js';
 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 const JWT_SECRET=process.env.JWT_SECRET||"MY_SECRET";
+
+
 
 export const registerUser= async(req,res)=>{
 
@@ -63,8 +67,8 @@ export const loginUser=async(req,res)=>{
 
         res.cookie('refreshToken',refreshToken,{
             httpOnly:true,
-            secure:true,
-            samesite:"strict",
+            secure:false,
+            sameSite:"strict",
         });
 
         const token = jwt.sign({email:user.email,name:user.name,id:user.id,role:user.role},process.env.JWT_SECRET,{expiresIn:'1d'});
@@ -123,4 +127,52 @@ export const logoutUser=async (req,res)=>{
         console.error('Error logging out user:', error);
         res.status(500).json({message:'Internal server error'});
     }
+}
+
+
+export const forgetPassword = async (req,res)=>{
+    try{
+        const {email}=req.body;
+
+        const user = prisma.user.findUnique({where:{email}});
+        if (!user){
+            return res.status(400).json({message:'user not found'});
+        }
+         
+        const passwordResetToken=crypto.randomBytes(32).toString('hex');
+        const passwordResetExpiry=new Date(Date.now()+60*60*1000); 
+
+        await prisma.user.update({
+            where:{email},
+            data:{passwordResetToken,passwordResetExpiry}
+        })
+
+        const transporter=nodemailer.createTransport({
+            host:'smtp.gmail.com',
+            port:587,
+            secure:false,
+            auth:{
+                user:process.env.SMTP_USER,
+                pass:process.env.SMTP_PASS
+            }
+        })
+
+
+
+
+        const resetURL=`http://localhost:3000/reset-password/${passwordResetToken}`;
+
+        await transporter.sendMail({
+            from : '"Meera .com " <liranso392@gmail.com>',
+            to:email,
+            subject:'password reset',
+            html:`<p>You requested for password reset</p><br>
+                   <p>Click <a href=${resetURL}>here</a> to reset your password</p>`
+        });
+
+        res.status(200).json({message:'Password reset link sent to your email'});     
+        }catch(error){
+            console.error('Error sending password reset email:', error);
+            res.status(500).json({message:'Internal server error'});
+        }
 }
