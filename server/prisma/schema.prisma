@@ -1,81 +1,186 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  role      Role      @default(BUYER)
-  orders    Order[]
-  createdAt DateTime  @default(now())
-  passwordResetToken String?
+  id                  String             @id @default(uuid())
+  email               String             @unique
+  password            String
+  name                String?
+  role                Role               @default(USER)
+  profile             Profile?
+  resumes             Resume[]
+  applications        Application[]
+  // Users can list skills via implicit many-to-many
+  skills              Skill[]            @relation("UserSkills")
+  sharedExperiences   SharedExperience[]
+  // Auth & recovery
+  passwordResetToken  String?
   passwordResetExpiry DateTime?
+  // Email verification
+  emailVerifiedAt     DateTime?
+  verificationToken   String?  @unique
+  verificationTokenExpiry DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 }
 
-model Product {
-  id          Int         @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  stock       Int
-  imageUrl    String?
-  categoryId  Int
-  category    Category    @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-
+model Client {
+  id          String    @id @default(uuid())
+  companyName String
+  email       String    @unique
+  password    String
+  about       String?
+  jobs        JobPost[]
+  createdAt   DateTime  @default(now())
 }
 
-model Category {
-  id        Int       @id @default(autoincrement())
-  name      String
-  products  Product[]
+model JobPost {
+  id               String        @id @default(uuid())
+  client           Client        @relation(fields: [clientId], references: [id])
+  clientId         String
+  title            String
+  description      String        @db.Text
+  skills           Skill[]       @relation("JobSkills")
+  salaryRange      String?
+  location         String?
+  applicationLimit Int?
+  deadline         DateTime?
+  status           JobStatus     @default(OPEN)
+  createdAt        DateTime      @default(now())
+  applications     Application[]
 }
 
-model Order {
-  id        Int         @id @default(autoincrement())
-  userId    Int
-  user      User        @relation(fields: [userId], references: [id])
-  total     Float
-  status    OrderStatus @default(PENDING)
-  orderItems OrderItem[]
-  createdAt DateTime    @default(now())
+model Application {
+  id                String             @id @default(uuid())
+  job               JobPost            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId             String
+  applicant         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  resume            Resume?            @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  resumeId          String?
+  proposal          String?            @db.Text
+  status            AppStatus          @default(PENDING)
+  score             ApplicationScore?
+  createdAt         DateTime           @default(now())
+  interviewInvites  InterviewInvite[]
+  interviews        Interview[]
+  sharedExperiences SharedExperience[]
+
+  // Prevent duplicate applications per user per job
+  @@unique([jobId, userId])
 }
 
-model OrderItem {
+model Resume {
+  id           String        @id @default(uuid())
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  content      String        @db.Text // full text or URL to stored file
+  parsedSkills Json?
+  createdAt    DateTime      @default(now())
+  applications Application[]
+}
+
+model ApplicationScore {
+  id            String      @id @default(uuid())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String      @unique
+  scorePercent  Int
+  details       Json? // explain why points gained/lost
+  attempts      Int         @default(0) // max 3 attempts allowed
+  createdAt     DateTime    @default(now())
+}
+
+model InterviewInvite {
+  id             String       @id @default(uuid())
+  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId  String
+  chosenByClient Boolean      @default(true)
+  options        Json // three options with times
+  status         InviteStatus @default(PENDING)
+  scheduledAt    DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+model Interview {
+  id            String           @id @default(uuid())
+  application   Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  transcript    String?          @db.Text
+  result        InterviewResult?
+  createdAt     DateTime         @default(now())
+}
+
+model SharedExperience {
+  id                 String      @id @default(uuid())
+  fromUser           User        @relation(fields: [fromUserId], references: [id])
+  fromUserId         String
+  aboutApplication   Application @relation(fields: [aboutApplicationId], references: [id], onDelete: Cascade)
+  aboutApplicationId String
+  consented          Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+}
+
+model Skill {
+  id    String    @id @default(uuid())
+  name  String    @unique
+  jobs  JobPost[] @relation("JobSkills")
+  users User[]    @relation("UserSkills")
+}
+
+model Profile {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String   @unique
+  headline     String?
+  bio          String?  @db.Text
+  experiences  Json?
+  achievements Json?
+  createdAt    DateTime @default(now())
+}
+
+// For logout/refresh-token revocation checks in auth flow
+model RevokedToken {
   id        Int      @id @default(autoincrement())
-  orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
+  token     String   @unique
+  revokedAt DateTime @default(now())
 }
 
 enum Role {
-  BUYER
+  USER
+  CLIENT
   ADMIN
 }
 
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPED
-  DELIVERED
-  CANCELLED
+enum JobStatus {
+  OPEN
+  CLOSED
+  REMOVED
 }
 
+enum AppStatus {
+  PENDING
+  SHORTLISTED
+  INTERVIEW
+  HIRED
+  REJECTED
+}
 
+enum InviteStatus {
+  PENDING
+  SENT
+  SCHEDULED
+  DECLINED
+}
 
-model RevokedToken{
-  id Int @id @default(autoincrement())
-  token String @unique
-  revokedAt DateTime @default(now())
+enum InterviewResult {
+  PASSED
+  FAILED
+  NO_DECISION
 }

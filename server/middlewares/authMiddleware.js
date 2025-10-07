@@ -12,7 +12,7 @@ export const protect = async (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
-  const isRevoked = await prisma.RevokedToken.findUnique({where:{token}});
+  const isRevoked = await prisma.revokedToken.findUnique({where:{token}});
   if (isRevoked){
     return res.status(401).json({message:"Token has been revoked, please login again"});
   }

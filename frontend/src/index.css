@@ -1,0 +1,36 @@
+:root{
+  --bg:#0f172a;
+  --card:#111827;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --accent:#06b6d4;
+  --danger:#ef4444;
+  --success:#22c55e;
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{margin:0;background:linear-gradient(135deg,#0b1024,#0f172a);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}
+.container{max-width:1000px;margin:0 auto;padding:24px}
+.auth-layout{display:flex;min-height:100vh}
+.auth-aside{flex:1;display:flex;align-items:center;justify-content:center;padding:48px;background:radial-gradient(1200px 600px at -10% -10%,#0ea5e9 0,#0ea5e900 70%),radial-gradient(800px 400px at 110% 110%,#22c55e 0,#22c55e00 70%)}
+.auth-aside h1{font-size:48px;margin:0 0 16px}
+.auth-aside p{color:var(--muted)}
+.auth-card{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:440px;background:rgba(17,24,39,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:16px;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,0.4);padding:24px}
+.card h2{margin:0 0 8px}
+.card .subtitle{margin:0 0 24px;color:var(--muted)}
+.field{margin-bottom:16px}
+.field label{display:block;margin-bottom:8px;color:#cbd5e1}
+.field input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #1f2937;background:#0b1220;color:var(--text)}
+.actions{display:flex;gap:12px;align-items:center}
+.btn{padding:12px 14px;border-radius:10px;border:1px solid transparent;background:var(--accent);color:#001018;cursor:pointer;font-weight:600}
+.btn.secondary{background:transparent;border-color:#334155;color:var(--text)}
+.btn.google{background:#fff;color:#111827}
+.btn.full{width:100%}
+.note{font-size:14px;color:var(--muted)}
+.alert{margin:8px 0 16px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08)}
+.alert.error{background:rgba(239,68,68,0.1);border-color:#ef4444}
+.alert.success{background:rgba(34,197,94,0.1);border-color:#22c55e}
+.row{display:flex;gap:12px}
+.spacer{height:12px}
