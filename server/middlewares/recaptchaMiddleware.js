@@ -1,11 +1,10 @@
 import fetch from 'node-fetch';
 
 export const verifyRecaptcha = async (req, res, next) => {
+
   try {
 
-    //if (process.env.NODE_ENV === "development") {
-      // Skip verification in development or Postman testing
-      return next();
+    
     
 
     const token = req.body.recaptchaToken || req.headers['x-recaptcha-token'];
@@ -30,11 +29,12 @@ export const verifyRecaptcha = async (req, res, next) => {
       body: params
     });
     const result = await response.json();
-
+    console.log('reCAPTCHA verify result:', result); // temporary debug log
     if (!result.success || (typeof result.score === 'number' && result.score < 0.5)) {
-      return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+      return res.status(400).json({ message: 'reCAPTCHA verification failed', recaptcha: result });
     }
-
+    // attach for temporary frontend visibility
+    req.recaptcha = result;
     next();
   } catch (err) {
     console.error('reCAPTCHA verify error:', err);

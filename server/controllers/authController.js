@@ -43,7 +43,7 @@ export const registerUser= async(req,res)=>{
             name,
             password:hashedPassword,
             email,
-            role: role || 'USER',
+            role: role === 'CLIENT' ? 'CLIENT' : 'USER',
             verificationToken,
             verificationTokenExpiry,
         }
@@ -51,7 +51,7 @@ export const registerUser= async(req,res)=>{
 
     // send verification email
     const transporter = buildTransporter();
-    const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}`;
+    const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}?redirect=1`;
     await transporter.sendMail({
       from: '"Job Board" <no-reply@jobboard.local>',
       to: email,
@@ -61,10 +61,11 @@ export const registerUser= async(req,res)=>{
              <p><a href="${verifyLink}">Verify Email</a> (valid for 24 hours)</p>`
     });
 
-    res.status(201).json({
-      message:'User registered. Please verify your email to continue.',
-      user:{id:user.id,name:user.name,email:user.email,role:user.role}
-    });
+        res.status(201).json({
+            message:'User registered. Please verify your email to continue.',
+            user:{id:user.id,name:user.name,email:user.email,role:user.role},
+            recaptcha: req.recaptcha || undefined
+        });
 
 } catch (error) {
     console.error('Error registering user:',error);
@@ -103,7 +104,7 @@ export const loginUser=async(req,res)=>{
         });
 
         const token = jwt.sign({email:user.email,name:user.name,id:user.id,role:user.role},process.env.JWT_SECRET,{expiresIn:'1d'});
-        res.status(200).json({message:'Login Successful',token});
+    res.status(200).json({message:'Login Successful',token, recaptcha: req.recaptcha || undefined});
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({message:'Internal server error'});
@@ -234,6 +235,19 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+export const getStats = async (req, res) => {
+    try {
+        const talents = await prisma.user.count({ where: { role: 'USER' } });
+        const clients = await prisma.user.count({ where: { role: 'CLIENT' } });
+        const companies = await prisma.client.count();
+        const jobs = await prisma.jobPost.count();
+        return res.status(200).json({ talents, clients, companies, jobs });
+    } catch (err) {
+        console.error('getStats error:', err);
+        return res.status(500).json({ message: 'Failed to fetch stats' });
+    }
+};
+
 // Email verification handlers
 export const verifyEmail = async (req, res) => {
     try {
@@ -248,12 +262,18 @@ export const verifyEmail = async (req, res) => {
         });
         if (!user) return res.status(400).json({ message: 'Invalid or expired token' });
 
-        await prisma.user.update({
+            await prisma.user.update({
             where: { id: user.id },
             data: { emailVerifiedAt: new Date(), verificationToken: null, verificationTokenExpiry: null },
         });
 
-        return res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+            // If accessed from a browser/email link, redirect to frontend login
+            const shouldRedirect = req.query.redirect === '1' || (req.headers.accept || '').includes('text/html');
+            const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+            if (shouldRedirect) {
+                return res.redirect(`${clientOrigin}/login`);
+            }
+            return res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
     } catch (err) {
         console.error('verifyEmail error:', err);
         return res.status(500).json({ message: 'Internal server error' });
@@ -278,7 +298,7 @@ export const resendVerification = async (req, res) => {
         });
 
         const transporter = buildTransporter();
-        const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}`;
+        const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}?redirect=1`;
         await transporter.sendMail({
             from: '"Job Board" <no-reply@jobboard.local>',
             to: email,

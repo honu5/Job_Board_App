@@ -1,6 +1,6 @@
 // routes/authRoutes.js
 import {Router} from 'express';
-import { refreshToken,registerUser, loginUser ,logoutUser, googleAuthInit, googleAuthCallback, verifyEmail, resendVerification, forgetPassword, resetPassword } from '../controllers/authController.js';
+import { refreshToken,registerUser, loginUser ,logoutUser, googleAuthInit, googleAuthCallback, verifyEmail, resendVerification, forgetPassword, resetPassword, getStats } from '../controllers/authController.js';
 import {authorize, protect} from '../middlewares/authMiddleware.js';
 import { verifyRecaptcha } from '../middlewares/recaptchaMiddleware.js';
 
@@ -38,3 +38,6 @@ router.get('/google/callback', googleAuthCallback);
 // Email verification
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', resendVerification);
+
+// Public stats for landing page
+router.get('/stats', getStats);

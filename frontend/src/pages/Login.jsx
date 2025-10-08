@@ -32,7 +32,7 @@ export default function Login() {
       <form onSubmit={onSubmit}>
         <TextField label="Email" name="email" value={email} onChange={(e)=>setEmail(e.target.value)} autoComplete="email" />
         <TextField label="Password" name="password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} autoComplete="current-password" />
-        <Recaptcha onChange={setRecaptchaToken} />
+  <Recaptcha onChange={(t)=>{ console.log('recaptcha token:', t); setRecaptchaToken(t); }} />
         <div className="actions">
           <button className="btn full" type="submit">Sign in</button>
         </div>

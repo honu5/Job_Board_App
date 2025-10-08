@@ -5,7 +5,7 @@ export default function AuthLayout({ title, subtitle, children }) {
     <div className="auth-layout">
       <aside className="auth-aside">
         <div>
-          <h1>Meera Jobs</h1>
+          <h1>Kihlot Jobs</h1>
           <p>Find your next opportunity, faster.</p>
         </div>
       </aside>
