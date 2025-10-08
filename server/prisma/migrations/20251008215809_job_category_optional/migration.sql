@@ -1,0 +1,10 @@
+-- CreateEnum
+CREATE TYPE "JobCategory" AS ENUM ('AI', 'WEB_DEVELOPMENT', 'GRAPHIC_DESIGN', 'DATA_SCIENCE', 'MOBILE', 'DEVOPS', 'MARKETING', 'SALES', 'PRODUCT', 'CUSTOMER_SUPPORT');
+
+-- CreateEnum
+CREATE TYPE "HireType" AS ENUM ('PROJECT', 'PERMANENT');
+
+-- AlterTable
+ALTER TABLE "JobPost" ADD COLUMN     "hireType" "HireType" NOT NULL DEFAULT 'PROJECT',
+ADD COLUMN     "jobCategory" "JobCategory",
+ADD COLUMN     "numOpenings" INTEGER;

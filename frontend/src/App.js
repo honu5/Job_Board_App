@@ -10,6 +10,12 @@ import VerifyEmail from './pages/VerifyEmail.jsx';
 import ResendVerification from './pages/ResendVerification.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import EmailVerified from './pages/EmailVerified.jsx';
+import Onboarding from './pages/Onboarding.jsx';
+import PublicProfile from './pages/PublicProfile.jsx';
+import CreatePost from './pages/CreatePost.jsx';
+import Jobs from './pages/Jobs.jsx';
+import PostJob from './pages/PostJob.jsx';
+import PostedJobs from './pages/PostedJobs.jsx';
 
 export default function App(){
 	return (
@@ -25,6 +31,12 @@ export default function App(){
 			<Route path="/email-verified" element={<EmailVerified />} />
 				<Route path="/resend-verification" element={<ResendVerification />} />
 				<Route path="/dashboard" element={<Dashboard />} />
+				<Route path="/dashboard/jobs" element={<Jobs />} />
+				<Route path="/dashboard/post-job" element={<PostJob />} />
+				<Route path="/dashboard/posted-jobs" element={<PostedJobs />} />
+						<Route path="/p/:id" element={<PublicProfile />} />
+						<Route path="/dashboard/post" element={<CreatePost />} />
+						<Route path="/onboarding" element={<Onboarding />} />
 			</Routes>
 		</BrowserRouter>
 	);

@@ -9,26 +9,31 @@ datasource db {
 }
 
 model User {
-  id                  String             @id @default(uuid())
-  email               String             @unique
-  password            String
-  name                String?
-  role                Role               @default(USER)
-  profile             Profile?
-  resumes             Resume[]
-  applications        Application[]
+  id                      String             @id @default(uuid())
+  email                   String             @unique
+  password                String
+  name                    String?
+  role                    Role               @default(USER)
+  profile                 Profile?
+  resumes                 Resume[]
+  applications            Application[]
   // Users can list skills via implicit many-to-many
-  skills              Skill[]            @relation("UserSkills")
-  sharedExperiences   SharedExperience[]
+  skills                  Skill[]            @relation("UserSkills")
+  sharedExperiences       SharedExperience[]
+  // Social feed
+  posts                   Post[]
+  postLikes               PostLike[]
+  postComments            PostComment[]
   // Auth & recovery
-  passwordResetToken  String?
-  passwordResetExpiry DateTime?
+  passwordResetToken      String?
+  passwordResetExpiry     DateTime?
   // Email verification
-  emailVerifiedAt     DateTime?
-  verificationToken   String?  @unique
+  emailVerifiedAt         DateTime?
+  verificationToken       String?            @unique
   verificationTokenExpiry DateTime?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  JobPost                 JobPost[]
 }
 
 model Client {
@@ -43,13 +48,24 @@ model Client {
 
 model JobPost {
   id               String        @id @default(uuid())
-  client           Client        @relation(fields: [clientId], references: [id])
-  clientId         String
+  // Original Client relation (optional to keep compatibility)
+  client           Client?       @relation(fields: [clientId], references: [id])
+  clientId         String?
+  // New author referencing User with role CLIENT
+  author           User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId         String
+  // Core fields
   title            String
+  companyName      String
   description      String        @db.Text
   skills           Skill[]       @relation("JobSkills")
-  salaryRange      String?
+  workMode         WorkMode      @default(REMOTE)
   location         String?
+  hoursPerWeek     Int?
+  jobCategory      JobCategory?
+  hireType         HireType      @default(PROJECT)
+  numOpenings      Int?
+  salaryRange      String?
   applicationLimit Int?
   deadline         DateTime?
   status           JobStatus     @default(OPEN)
@@ -135,14 +151,63 @@ model Skill {
 }
 
 model Profile {
-  id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String   @unique
-  headline     String?
-  bio          String?  @db.Text
-  experiences  Json?
-  achievements Json?
-  createdAt    DateTime @default(now())
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String   @unique
+  headline       String?
+  bio            String?  @db.Text
+  jobTitle       String?
+  avatarUrl      String?
+  experiences    Json?
+  achievements   Json?
+  education      Json?
+  projects       Json?
+  links          Json?
+  // Employer-specific fields
+  companyName    String?
+  companyWebsite String?
+  companySize    String?
+  industry       String?
+  location       String?
+  logoUrl        String?
+  aboutCompany   String?  @db.Text
+  hiringNeeds    Json?
+  contact        Json?
+  createdAt      DateTime @default(now())
+}
+
+// Social feed models
+model Post {
+  id        String        @id @default(uuid())
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  content   String?       @db.Text
+  mediaUrl  String?
+  mediaType String? // image|video
+  createdAt DateTime      @default(now())
+  likes     PostLike[]
+  comments  PostComment[]
+}
+
+model PostLike {
+  id        String   @id @default(uuid())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model PostComment {
+  id        String   @id @default(uuid())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
 }
 
 // For logout/refresh-token revocation checks in auth flow
@@ -183,4 +248,27 @@ enum InterviewResult {
   PASSED
   FAILED
   NO_DECISION
+}
+
+enum WorkMode {
+  REMOTE
+  IN_PERSON
+}
+
+enum JobCategory {
+  AI
+  WEB_DEVELOPMENT
+  GRAPHIC_DESIGN
+  DATA_SCIENCE
+  MOBILE
+  DEVOPS
+  MARKETING
+  SALES
+  PRODUCT
+  CUSTOMER_SUPPORT
+}
+
+enum HireType {
+  PROJECT
+  PERMANENT
 }

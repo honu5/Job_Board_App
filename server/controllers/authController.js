@@ -49,11 +49,12 @@ export const registerUser= async(req,res)=>{
         }
     })
 
-        res.status(201).json({
-            message:'User registered. Please verify your email to continue.',
-            user:{id:user.id,name:user.name,email:user.email,role:user.role},
-            recaptcha: req.recaptcha || undefined
-        });
+            res.status(201).json({
+                message:'User registered. Please verify your email to continue.',
+                next:"/onboarding",
+                user:{id:user.id,name:user.name,email:user.email,role:user.role},
+                recaptcha: req.recaptcha || undefined
+            });
 
         // send verification email in background
         const transporter = buildTransporter();
@@ -273,15 +274,34 @@ export const verifyEmail = async (req, res) => {
             data: { emailVerifiedAt: new Date(), verificationToken: null, verificationTokenExpiry: null },
         });
 
-            // If accessed from a browser/email link, redirect to frontend login
+            // After verifying, log the user in (issue refresh + access) and redirect to onboarding with token
+            const accessToken = jwt.sign({ name: user.name, email: user.email, id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+            const refreshToken = jwt.sign({ name: user.name, email: user.email, id: user.id, role: user.role }, process.env.REFRESH_SECRET, { expiresIn: '30d' });
+            res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'strict' });
+
             const shouldRedirect = req.query.redirect === '1' || (req.headers.accept || '').includes('text/html');
-            const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
             if (shouldRedirect) {
-                return res.redirect(`${clientOrigin}/login`);
+                // Forward token via onboarding redirect endpoint (which will bounce to client origin)
+                return res.redirect(`${appBaseUrl(req)}/api/auth/onboarding?role=${encodeURIComponent(user.role)}&token=${encodeURIComponent(accessToken)}`);
             }
-            return res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+            return res.status(200).json({ message: 'Email verified successfully.', token: accessToken });
     } catch (err) {
         console.error('verifyEmail error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const onboardingRedirect = async (req, res) => {
+    try {
+        const role = (req.query.role === 'CLIENT') ? 'CLIENT' : 'USER';
+        const token = req.query.token;
+        const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+        const url = new URL(`${clientOrigin}/onboarding`);
+        url.searchParams.set('role', role);
+        if (token) url.searchParams.set('token', token);
+        return res.redirect(url.toString());
+    } catch (err) {
+        console.error('onboardingRedirect error:', err);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
