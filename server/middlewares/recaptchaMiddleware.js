@@ -29,7 +29,6 @@ export const verifyRecaptcha = async (req, res, next) => {
       body: params
     });
     const result = await response.json();
-    console.log('reCAPTCHA verify result:', result); // temporary debug log
     if (!result.success || (typeof result.score === 'number' && result.score < 0.5)) {
       return res.status(400).json({ message: 'reCAPTCHA verification failed', recaptcha: result });
     }

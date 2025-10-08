@@ -49,22 +49,28 @@ export const registerUser= async(req,res)=>{
         }
     })
 
-    // send verification email
-    const transporter = buildTransporter();
-    const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}?redirect=1`;
-    await transporter.sendMail({
-      from: '"Job Board" <no-reply@jobboard.local>',
-      to: email,
-      subject: 'Verify your email',
-      html: `<p>Welcome${name ? `, ${name}` : ''}!</p>
-             <p>Please verify your email to activate your account.</p>
-             <p><a href="${verifyLink}">Verify Email</a> (valid for 24 hours)</p>`
-    });
-
         res.status(201).json({
             message:'User registered. Please verify your email to continue.',
             user:{id:user.id,name:user.name,email:user.email,role:user.role},
             recaptcha: req.recaptcha || undefined
+        });
+
+        // send verification email in background
+        const transporter = buildTransporter();
+        const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}?redirect=1`;
+        setImmediate(async () => {
+            try {
+                await transporter.sendMail({
+                    from: '"Kihlot Jobs" <no-reply@kihlot.local>',
+                    to: email,
+                    subject: 'Verify your email',
+                    html: `<p>Welcome${name ? `, ${name}` : ''}!</p>
+                                 <p>Please verify your email to activate your account.</p>
+                                 <p><a href="${verifyLink}">Verify Email</a> (valid for 24 hours)</p>`
+                });
+            } catch (e) {
+                console.error('Error sending verification email (background):', e);
+            }
         });
 
 } catch (error) {
@@ -297,17 +303,25 @@ export const resendVerification = async (req, res) => {
             data: { verificationToken, verificationTokenExpiry },
         });
 
-        const transporter = buildTransporter();
-        const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}?redirect=1`;
-        await transporter.sendMail({
-            from: '"Job Board" <no-reply@jobboard.local>',
-            to: email,
-            subject: 'Verify your email',
-            html: `<p>Please verify your email.</p>
-                         <p><a href="${verifyLink}">Verify Email</a> (valid for 24 hours)</p>`
-        });
+            // respond quickly
+            const verifyLink = `${appBaseUrl(req)}/api/auth/verify-email/${verificationToken}?redirect=1`;
+            res.status(200).json({ message: 'Verification email sent' });
 
-        return res.status(200).json({ message: 'Verification email sent' });
+            // send in background
+            const transporter = buildTransporter();
+            setImmediate(async () => {
+                try {
+                    await transporter.sendMail({
+                        from: '"Kihlot Jobs" <no-reply@kihlot.local>',
+                        to: email,
+                        subject: 'Verify your email',
+                        html: `<p>Please verify your email.</p>
+                                     <p><a href="${verifyLink}">Verify Email</a> (valid for 24 hours)</p>`
+                    });
+                } catch (e) {
+                    console.error('Error resending verification email (background):', e);
+                }
+            });
     } catch (err) {
         console.error('resendVerification error:', err);
         return res.status(500).json({ message: 'Internal server error' });
@@ -320,8 +334,9 @@ export const googleAuthInit = async (req, res) => {
         const clientId = process.env.GOOGLE_CLIENT_ID;
         const redirectUri = `${appBaseUrl(req)}/api/auth/google/callback`;
         const scope = encodeURIComponent('openid email profile');
-        const state = crypto.randomBytes(8).toString('hex');
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${state}`;
+        const role = (req.query.role === 'CLIENT') ? 'CLIENT' : 'USER';
+        const statePayload = Buffer.from(JSON.stringify({ r: role, t: crypto.randomBytes(4).toString('hex') })).toString('base64url');
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${statePayload}`;
         // Optionally set state cookie here
         return res.redirect(authUrl);
     } catch (err) {
@@ -332,7 +347,7 @@ export const googleAuthInit = async (req, res) => {
 
 export const googleAuthCallback = async (req, res) => {
     try {
-        const { code } = req.query;
+        const { code, state } = req.query;
         if (!code) return res.status(400).json({ message: 'Missing authorization code' });
 
         const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -368,7 +383,16 @@ export const googleAuthCallback = async (req, res) => {
             return res.status(400).json({ message: 'Failed to fetch Google user profile' });
         }
 
-        // Upsert user by email
+            // Decode role from state if provided
+            let incomingRole = 'USER';
+            try {
+                if (state) {
+                    const s = JSON.parse(Buffer.from(state, 'base64url').toString());
+                    if (s?.r === 'CLIENT') incomingRole = 'CLIENT';
+                }
+            } catch {}
+
+            // Upsert user by email (create if first-time -> OAuth signup)
         const email = profile.email?.toLowerCase();
         if (!email) return res.status(400).json({ message: 'Email not provided by Google' });
 
@@ -381,7 +405,7 @@ export const googleAuthCallback = async (req, res) => {
                     email,
                     name: profile.name || profile.given_name || 'Google User',
                     password: hashedPassword,
-                    role: 'USER',
+                        role: incomingRole,
                     emailVerifiedAt: profile.verified_email ? new Date() : null,
                 },
             });
@@ -394,7 +418,10 @@ export const googleAuthCallback = async (req, res) => {
         const refreshToken = jwt.sign({ name: user.name, email: user.email, id: user.id, role: user.role }, process.env.REFRESH_SECRET, { expiresIn: '30d' });
 
         res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'strict' });
-        return res.status(200).json({ message: 'Google login successful', token: accessToken });
+            // Redirect to dashboard with token (front-end will store it and clean URL)
+            const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+            const redirectUrl = `${clientOrigin}/dashboard?token=${encodeURIComponent(accessToken)}`;
+            return res.redirect(redirectUrl);
     } catch (err) {
         console.error('googleAuthCallback error:', err);
         return res.status(500).json({ message: 'Internal server error' });

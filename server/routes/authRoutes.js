@@ -8,10 +8,10 @@ import { verifyRecaptcha } from '../middlewares/recaptchaMiddleware.js';
 const router = Router();
 
 // User Registration
-router.post('/register', verifyRecaptcha, registerUser);
+router.post('/register', registerUser);
 
 // User Login
-router.post('/login', verifyRecaptcha, loginUser);
+router.post('/login', loginUser);
 router.post('/logout',protect,logoutUser);
 router.get('/dashboard',protect,authorize("ADMIN","USER","CLIENT"),async (req,res)=>{
     res.status(200).json({message:`wellcome  ${req.user.name}`,user:req.user}); 

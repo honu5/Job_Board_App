@@ -3,6 +3,7 @@ import AuthLayout from '../components/AuthLayout.jsx';
 import TextField from '../components/TextField.jsx';
 import Alert from '../components/Alert.jsx';
 import Recaptcha from '../components/Recaptcha.jsx';
+import GoogleButton from '../components/GoogleButton.jsx';
 import api from '../api.js';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -28,7 +29,7 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout title="Create your account" subtitle={role==='CLIENT' ? 'Create a client account to hire talents' : 'Join Meera Jobs and start applying in minutes'}>
+  <AuthLayout title="Create your account" subtitle={role==='CLIENT' ? 'Create a client account to hire talents' : 'Join Kihlot Jobs and start applying in minutes'}>
       {message && <Alert kind="success">{message}</Alert>}
       {error && <Alert>{error}</Alert>}
       <form onSubmit={onSubmit}>
@@ -40,6 +41,8 @@ export default function Register() {
           <button className="btn full" type="submit">Create account</button>
         </div>
       </form>
+      <div className="spacer"/>
+      <GoogleButton role={role} />
       <p className="note">Already have an account? <Link to="/login">Sign in</Link></p>
     </AuthLayout>
   );
