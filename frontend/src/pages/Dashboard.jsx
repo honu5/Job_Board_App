@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api.js';
 import Jobs from './Jobs.jsx';
 import PostedJobs from './PostedJobs.jsx';
+import AppliedJobs from './AppliedJobs.jsx';
 
 // Helper to resolve media URLs coming from the API.
 // If mediaUrl is relative like "/uploads/..", prefix with the server origin from axios baseURL.
@@ -33,6 +34,7 @@ export default function Dashboard(){
   const [active, setActive] = useState('home');
   const [showSidebar, setShowSidebar] = useState(true);
   const [feed, setFeed] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   // Role-aware label mapping: for CLIENT users, show "Posted jobs" instead of "Applied"
   const navLabel = (item, u) => {
@@ -62,11 +64,24 @@ export default function Dashboard(){
           const f = await api.get('/feed');
           setFeed(f.data?.posts || []);
         } catch {}
+        try {
+          const n = await api.get('/notifications');
+          setNotifications(n.data?.notifications || []);
+        } catch {}
       }catch(err){
         setError(err.response?.data?.message || 'Failed to load dashboard');
       }
     })();
   },[]);
+
+  // Refresh notifications when tab switches to notifications
+  useEffect(()=>{
+    if (active === 'notifications') {
+      (async()=>{
+        try{ const n = await api.get('/notifications'); setNotifications(n.data?.notifications||[]); }catch{}
+      })();
+    }
+  },[active]);
 
   const Field = ({label, children}) => (
     <div style={{marginBottom:10}}>
@@ -339,6 +354,24 @@ export default function Dashboard(){
               <Jobs />
             ) : active === 'applied' && (user.role === 'CLIENT' || user.role === 'ADMIN') ? (
               <PostedJobs />
+            ) : active === 'applied' && user.role === 'USER' ? (
+              <AppliedJobs />
+            ) : active === 'notifications' ? (
+              <div>
+                {notifications.length === 0 && <div>No notifications.</div>}
+                <div style={{display:'grid',gap:12}}>
+                  {notifications.map(n => (
+                    <div key={n.id} style={{border:'1px solid #e2e8f0',borderRadius:10,padding:12,background:n.read?'#fff':'#f0fdf4'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <div style={{fontWeight:600}}>{n.title}</div>
+                        {!n.read && <button className="btn secondary" onClick={async()=>{ await api.post(`/notifications/${n.id}/mark`); const resp = await api.get('/notifications'); setNotifications(resp.data?.notifications||[]); }}>Mark read</button>}
+                      </div>
+                      <div style={{marginTop:4,whiteSpace:'pre-wrap'}}>{n.message}</div>
+                      <div style={{fontSize:12,color:'#64748b',marginTop:6}}>{new Date(n.createdAt).toLocaleString()}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
               <p>Welcome, {user.name || user.email}. This is your {navLabel(nav.find(n=>n.key===active), user)} section.</p>
             )

@@ -63,6 +63,7 @@ export default function PostedJobs(){
                 <button onClick={()=>editJob(j)} style={{padding:'6px 10px',border:'1px solid #cbd5e1',borderRadius:6,background:'#fff'}}>Edit</button>
                 <button onClick={()=>toggleStatus(j)} style={{padding:'6px 10px',border:'1px solid #cbd5e1',borderRadius:6,background:j.status==='OPEN'?'#fff':'#f0fdf4'}}>{j.status==='OPEN'?'Close':'Re-open'}</button>
                 <button onClick={()=>deleteJob(j)} style={{padding:'6px 10px',border:'1px solid #ef4444',color:'#ef4444',borderRadius:6,background:'#fff'}}>Delete</button>
+                <a href={`/dashboard/jobs/${j.id}/applications`} style={{padding:'6px 10px',border:'1px solid #16a34a',borderRadius:6,background:'#16a34a', color:'#fff', textDecoration:'none'}}>View applications</a>
               </div>
             </div>
             <div style={{marginTop:8, color:'#0f172a'}}>{j.description}</div>

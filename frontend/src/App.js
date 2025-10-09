@@ -16,6 +16,10 @@ import CreatePost from './pages/CreatePost.jsx';
 import Jobs from './pages/Jobs.jsx';
 import PostJob from './pages/PostJob.jsx';
 import PostedJobs from './pages/PostedJobs.jsx';
+import ApplyJob from './pages/ApplyJob.jsx';
+import AppliedJobs from './pages/AppliedJobs.jsx';
+import JobApplications from './pages/JobApplications.jsx';
+import Chat from './pages/Chat.jsx';
 
 export default function App(){
 	return (
@@ -34,6 +38,10 @@ export default function App(){
 				<Route path="/dashboard/jobs" element={<Jobs />} />
 				<Route path="/dashboard/post-job" element={<PostJob />} />
 				<Route path="/dashboard/posted-jobs" element={<PostedJobs />} />
+				<Route path="/dashboard/apply" element={<ApplyJob />} />
+				<Route path="/dashboard/applied-jobs" element={<AppliedJobs />} />
+				<Route path="/dashboard/jobs/:id/applications" element={<JobApplications />} />
+				<Route path="/dashboard/chat" element={<Chat />} />
 						<Route path="/p/:id" element={<PublicProfile />} />
 						<Route path="/dashboard/post" element={<CreatePost />} />
 						<Route path="/onboarding" element={<Onboarding />} />

@@ -8,6 +8,8 @@ import { listFeed, createPost, toggleLike, addComment, updatePost, deletePost } 
 import cookieParser from 'cookie-parser';
 import { prisma } from './config/db.js';
 import { createJob, updateJob, listJobs, listPostedJobs, deleteJob, getJob, jobStats } from './controllers/jobController.js';
+import { applyToJob, listMyApplications, updateApplication, deleteApplication, listJobApplications, acceptForInterview, toggleConsent } from './controllers/applicationController.js';
+import { listNotifications, markNotification } from './controllers/notificationController.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -84,5 +86,18 @@ app.get('/api/jobs/posted', protect, listPostedJobs);
 app.get('/api/jobs/:id', protect, getJob);
 app.delete('/api/jobs/:id', protect, deleteJob);
 app.get('/api/jobs-stats', protect, jobStats);
+
+// Applications endpoints (protected)
+app.post('/api/applications', protect, applyToJob);
+app.get('/api/applications', protect, listMyApplications);
+app.put('/api/applications/:id', protect, updateApplication);
+app.delete('/api/applications/:id', protect, deleteApplication);
+app.get('/api/jobs/:id/applications', protect, listJobApplications);
+app.post('/api/applications/:id/accept-interview', protect, acceptForInterview);
+app.post('/api/applications/:id/consent', protect, toggleConsent);
+
+// Notifications
+app.get('/api/notifications', protect, listNotifications);
+app.post('/api/notifications/:id/mark', protect, markNotification);
 
 export default app;

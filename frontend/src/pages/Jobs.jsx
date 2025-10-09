@@ -5,6 +5,7 @@ export default function Jobs(){
   const [jobs, setJobs] = useState([]);
   const [me, setMe] = useState(null);
   const [error, setError] = useState('');
+  const [appliedJobIds, setAppliedJobIds] = useState(new Set());
 
   const load = async ()=>{
     try{
@@ -12,6 +13,14 @@ export default function Jobs(){
       setMe(dash.data.user);
       const { data } = await api.get('/jobs');
       setJobs(data.jobs || []);
+      // fetch my applications if user
+      if (dash.data.user?.role === 'USER') {
+        try {
+          const apps = await api.get('/applications');
+          const ids = new Set((apps.data.applications||[]).map(a=>a.jobId));
+          setAppliedJobIds(ids);
+        } catch {}
+      }
     }catch(e){ setError(e.response?.data?.message || 'Failed to load jobs'); }
   };
   useEffect(()=>{ load(); },[]);
@@ -21,6 +30,7 @@ export default function Jobs(){
   };
 
   const isClient = me?.role === 'CLIENT' || me?.role === 'ADMIN';
+  const isUser = me?.role === 'USER';
 
   return (
     <div className="container" style={{paddingTop:16,paddingBottom:16}}>
@@ -59,9 +69,19 @@ export default function Jobs(){
                 {j.skills.map(s => <span key={s.id} style={{padding:'6px 10px',border:'1px solid #e2e8f0',borderRadius:999,background:'#f8fafc'}}>{s.name}</span>)}
               </div>
             )}
-            {isClient && (me?.id === j.authorId || me?.role === 'ADMIN') && (
+            {(isClient && (me?.id === j.authorId || me?.role === 'ADMIN')) && (
               <div style={{marginTop:12}}>
                 <button className="btn secondary" onClick={()=>editJob(j)}>Edit</button>
+              </div>
+            )}
+            {isUser && !appliedJobIds.has(j.id) && (
+              <div style={{marginTop:12}}>
+                <a className="btn" href={`/dashboard/apply?jobId=${j.id}`}>Apply</a>
+              </div>
+            )}
+            {isUser && appliedJobIds.has(j.id) && (
+              <div style={{marginTop:12}}>
+                <span style={{padding:'6px 12px',border:'1px solid #16a34a',borderRadius:8,background:'#f0fdf4',color:'#065f46',fontSize:14}}>Already applied</span>
               </div>
             )}
           </div>
