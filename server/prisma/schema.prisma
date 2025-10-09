@@ -25,6 +25,7 @@ model User {
   posts                   Post[]
   postLikes               PostLike[]
   postComments            PostComment[]
+  chatMessages            ChatMessage[]
   // Auth & recovery
   passwordResetToken      String?
   passwordResetExpiry     DateTime?
@@ -32,9 +33,12 @@ model User {
   emailVerifiedAt         DateTime?
   verificationToken       String?            @unique
   verificationTokenExpiry DateTime?
+  // Google Calendar/Meet integration
+  googleRefreshToken      String?
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
   JobPost                 JobPost[]
+  TalentRating            TalentRating[]
 }
 
 model Client {
@@ -89,6 +93,11 @@ model Application {
   interviewInvites  InterviewInvite[]
   interviews        Interview[]
   sharedExperiences SharedExperience[]
+  // Work lifecycle
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  ratings           TalentRating[]
+  chatMessages      ChatMessage[]
 
   // Prevent duplicate applications per user per job
   @@unique([jobId, userId])
@@ -115,14 +124,17 @@ model ApplicationScore {
 }
 
 model InterviewInvite {
-  id             String       @id @default(uuid())
-  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  applicationId  String
-  chosenByClient Boolean      @default(true)
-  options        Json // three options with times
-  status         InviteStatus @default(PENDING)
-  scheduledAt    DateTime?
-  createdAt      DateTime     @default(now())
+  id              String       @id @default(uuid())
+  application     Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId   String
+  chosenByClient  Boolean      @default(true)
+  options         Json // three options with times
+  status          InviteStatus @default(PENDING)
+  scheduledAt     DateTime?
+  // Google Meet details
+  meetLink        String?
+  calendarEventId String?
+  createdAt       DateTime     @default(now())
 }
 
 model Interview {
@@ -159,6 +171,7 @@ model Profile {
   bio            String?  @db.Text
   jobTitle       String?
   avatarUrl      String?
+  introVideoUrl  String?
   experiences    Json?
   achievements   Json?
   education      Json?
@@ -227,6 +240,29 @@ model Notification {
   type      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model TalentRating {
+  id            String      @id @default(uuid())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  rater         User        @relation(fields: [raterId], references: [id], onDelete: Cascade)
+  raterId       String
+  rating        Int
+  comment       String?     @db.Text
+  period        String? // e.g., "Month 1" for permanent jobs
+  createdAt     DateTime    @default(now())
+}
+
+// Chat messages per application room
+model ChatMessage {
+  id            String      @id @default(uuid())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  sender        User        @relation(fields: [senderId], references: [id])
+  senderId      String
+  content       String      @db.Text
+  createdAt     DateTime    @default(now())
 }
 
 enum Role {

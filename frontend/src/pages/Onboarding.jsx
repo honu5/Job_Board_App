@@ -12,6 +12,8 @@ export default function Onboarding(){
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarUpload, setAvatarUpload] = useState(null);
+  const [introVideo, setIntroVideo] = useState(null);
+  const [introVideoUrl, setIntroVideoUrl] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [headline, setHeadline] = useState('');
   const [bio, setBio] = useState('');
@@ -76,6 +78,7 @@ export default function Onboarding(){
           setAchievements(Array.isArray(p.achievements)?p.achievements:[{ text:'', link:'' }]);
           setProjects(Array.isArray(p.projects)?p.projects:[{ description:'', liveDemo:'', github:'' }]);
           setLinks(p.links||{ github:'', linkedin:'', leetcode:'', website:'' });
+          setIntroVideoUrl(p.introVideoUrl || '');
           if (prof.data.skills) setSelectedSkills(prof.data.skills.map(s=>s.name).slice(0,15));
           // employer fields
           setCompanyName(p.companyName||'');
@@ -110,6 +113,14 @@ export default function Onboarding(){
   const onSubmit = async (e) => {
     e.preventDefault(); setError(''); setSuccess('');
     try{
+      if (introVideo) {
+        if (introVideo.size > 70 * 1024 * 1024) throw new Error('Video exceeds 70MB limit');
+        const ok = ['video/mp4','video/webm','video/quicktime'];
+        if (!ok.includes(introVideo.type)) throw new Error('Only MP4, WEBM, MOV allowed');
+        const fd = new FormData(); fd.append('video', introVideo);
+        const res = await api.post('/user/profile/video', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        setIntroVideoUrl(res.data?.introVideoUrl || '');
+      }
       // If avatarUpload chosen, in future we can upload to storage; for now prefer avatarUrl field
       const payload = role === 'CLIENT'
         ? { fullName, avatarUrl, headline, bio,
@@ -119,7 +130,7 @@ export default function Onboarding(){
       setSuccess('Profile saved! Redirecting to your dashboard...');
       setTimeout(()=>navigate('/dashboard'), 800);
     }catch(err){
-      setError(err.response?.data?.message || 'Failed to save profile');
+      setError(err.response?.data?.message || err.message || 'Failed to save profile');
     }
   };
 
@@ -145,6 +156,19 @@ export default function Onboarding(){
             <TextField label="Role / Job title" name="jobTitle" value={jobTitle} onChange={(e)=>setJobTitle(e.target.value)} />
           )}
           <TextField label="Headline (optional)" name="headline" value={headline} onChange={(e)=>setHeadline(e.target.value)} />
+          <div className="field">
+            <label>Intro video (optional, up to 70MB; MP4/WEBM/MOV)</label>
+            <div className="row">
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(e)=>setIntroVideo(e.target.files?.[0]||null)} />
+              {introVideoUrl && <button type="button" className="btn secondary" onClick={async()=>{ try{ await api.delete('/user/profile/video'); setIntroVideoUrl(''); setIntroVideo(null);}catch{}}}>Remove existing</button>}
+            </div>
+            {introVideo && (<p style={{fontSize:12,color:'#334155',marginTop:6}}>Selected: {introVideo.name} ({(introVideo.size/1024/1024).toFixed(1)} MB)</p>)}
+            {introVideoUrl && (
+              <div style={{marginTop:8}}>
+                <video src={introVideoUrl} controls style={{width:'100%',maxHeight:260,borderRadius:10}} />
+              </div>
+            )}
+          </div>
           {role !== 'CLIENT' && (
           <div className="field">
             <label>About you (Bio)</label>

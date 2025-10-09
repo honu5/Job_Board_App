@@ -20,6 +20,8 @@ const nav = [
   { key:'jobs', label:'Jobs', icon:'💼' },
   { key:'applied', label:'Applied', icon:'📄' },
   { key:'on-demand', label:'On demand', icon:'⚡' },
+  { key:'interview', label:'Interview', icon:'🎤' },
+  { key:'scorer', label:'Resume scorer', icon:'📝' },
   { key:'messages', label:'Messages', icon:'✉️' },
   { key:'notifications', label:'Notifications', icon:'🔔' },
   { key:'profile', label:'Profile', icon:'👤' },
@@ -35,6 +37,7 @@ export default function Dashboard(){
   const [showSidebar, setShowSidebar] = useState(true);
   const [feed, setFeed] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [onDemand, setOnDemand] = useState({ topPosted: [], topApplied: [], postedJobsByCat: {}, appliedJobsByCat: {} });
 
   // Role-aware label mapping: for CLIENT users, show "Posted jobs" instead of "Applied"
   const navLabel = (item, u) => {
@@ -68,6 +71,15 @@ export default function Dashboard(){
           const n = await api.get('/notifications');
           setNotifications(n.data?.notifications || []);
         } catch {}
+        try {
+          const od = await api.get('/on-demand/categories');
+          setOnDemand({
+            topPosted: od.data?.topPosted || [],
+            topApplied: od.data?.topApplied || [],
+            postedJobsByCat: od.data?.postedJobsByCat || {},
+            appliedJobsByCat: od.data?.appliedJobsByCat || {}
+          });
+        } catch (e) { /* ignore */ }
       }catch(err){
         setError(err.response?.data?.message || 'Failed to load dashboard');
       }
@@ -105,6 +117,7 @@ export default function Dashboard(){
   const ProfileView = () => {
     if (!user) return null;
     const r = user.role || 'USER';
+    const video = resolveMedia(profile?.introVideoUrl);
     const EmployerCard = () => {
       if (r !== 'CLIENT' || !profile) return null;
       const fields = [
@@ -163,6 +176,12 @@ export default function Dashboard(){
                 alert('Public profile link copied to clipboard: ' + publicUrl);
               }}>Share profile</button>
             </div>
+            {video && (
+              <div style={{marginTop:16}}>
+                <div style={{fontSize:12,color:'#64748b',textTransform:'uppercase',letterSpacing:0.5}}>Intro video</div>
+                <video src={video} controls style={{width:'100%',maxHeight:300,borderRadius:12,marginTop:6}} />
+              </div>
+            )}
           </div>
         </div>
         <EmployerCard />
@@ -247,6 +266,8 @@ export default function Dashboard(){
           {nav.map(n => (
             <button key={n.key} onClick={()=>{
                 if (n.key === 'logout') return handleLogout();
+                if (n.key === 'interview') { window.location.href = '/interview'; return; }
+                if (n.key === 'scorer') { window.location.href = '/dashboard/resume-scorer'; return; }
                 setActive(n.key);
               }}
               style={{
@@ -298,7 +319,7 @@ export default function Dashboard(){
                     }}>
                       <div style={{display:'flex',gap:17,alignItems:'center',padding:12}}>
                         <div style={{width:36,height:36,borderRadius:'50%',background:'#ecfdf5',display:'flex',alignItems:'center',justifyContent:'center',color:'#065f46'}}>
-                          {(p.author?.name || p.author?.email || 'U')[0].toUpperCase()}
+                          {(((p.author?.name || p.author?.email || 'U') || 'U').charAt(0) || 'U').toUpperCase()}
                         </div>
                         <div>
                           <div style={{fontWeight:600}}>{p.author?.name || p.author?.email}</div>
@@ -371,6 +392,57 @@ export default function Dashboard(){
                     </div>
                   ))}
                 </div>
+              </div>
+            ) : active === 'on-demand' ? (
+              <div>
+                <h3 style={{marginTop:0}}>In-Demand Categories & Jobs</h3>
+                <div style={{display:'grid',gap:24,gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))'}}>
+                  {onDemand.topPosted.map(c => {
+                    const jobs = onDemand.postedJobsByCat[c.jobCategory] || [];
+                    return (
+                      <div key={'posted-'+c.jobCategory} style={{border:'2px solid #16a34a',borderRadius:16,padding:16,background:'#f0fdf4',display:'flex',flexDirection:'column',minHeight:260}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                          <h4 style={{margin:'4px 0'}}>{c.jobCategory}</h4>
+                          <span style={{fontSize:12,color:'#065f46'}}>{c._count?._all || c.count || 0} jobs</span>
+                        </div>
+                        <div style={{fontSize:12,color:'#065f46',marginBottom:8,fontWeight:600}}>Recently Posted</div>
+                        {jobs.length === 0 && <div style={{color:'#64748b',fontSize:14}}>No jobs yet.</div>}
+                        <ul style={{listStyle:'none',padding:0,margin:0,flexGrow:1,display:'flex',flexDirection:'column',gap:6}}>
+                          {jobs.map(j => (
+                            <li key={j.id} style={{background:'#ffffff',border:'1px solid #bbf7d0',borderRadius:8,padding:'8px 10px'}}>
+                              <div style={{fontWeight:600,fontSize:14}}>{j.title}</div>
+                              <div style={{fontSize:12,color:'#64748b'}}>{j.companyName}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                  {onDemand.topPosted.length === 0 && <div style={{color:'#64748b'}}>No posted category data yet.</div>}
+                  {onDemand.topApplied.map(c => {
+                    const jobs = onDemand.appliedJobsByCat[c.jobCategory] || [];
+                    return (
+                      <div key={'applied-'+c.jobCategory} style={{border:'2px solid #0ea5e9',borderRadius:16,padding:16,background:'#f0f9ff',display:'flex',flexDirection:'column',minHeight:260}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                          <h4 style={{margin:'4px 0'}}>{c.jobCategory}</h4>
+                          <span style={{fontSize:12,color:'#0369a1'}}>{c._count?._all || c.count || 0} applies</span>
+                        </div>
+                        <div style={{fontSize:12,color:'#0369a1',marginBottom:8,fontWeight:600}}>Sample Jobs</div>
+                        {jobs.length === 0 && <div style={{color:'#64748b',fontSize:14}}>No jobs captured.</div>}
+                        <ul style={{listStyle:'none',padding:0,margin:0,flexGrow:1,display:'flex',flexDirection:'column',gap:6}}>
+                          {jobs.map(j => (
+                            <li key={j.id} style={{background:'#ffffff',border:'1px solid #bae6fd',borderRadius:8,padding:'8px 10px'}}>
+                              <div style={{fontWeight:600,fontSize:14}}>{j.title}</div>
+                              <div style={{fontSize:12,color:'#64748b'}}>{j.companyName}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                  {onDemand.topApplied.length === 0 && <div style={{color:'#64748b'}}>No applied category data yet.</div>}
+                </div>
+                <p style={{marginTop:24,fontSize:12,color:'#64748b'}}>Auto-refreshed when new jobs or applications appear.</p>
               </div>
             ) : (
               <p>Welcome, {user.name || user.email}. This is your {navLabel(nav.find(n=>n.key===active), user)} section.</p>

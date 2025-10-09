@@ -12,7 +12,10 @@
 html,body,#root{height:100%}
 body{margin:0;background:linear-gradient(180deg,#ffffff 0%, #ecfdf5 100%);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
 a{color:var(--accent);text-decoration:none}
-.container{max-width:1100px;margin:0 auto;padding:24px}
+.container{width:70%;max-width:1400px;min-width:900px;margin:0 auto;padding:24px}
+@media (max-width:1200px){
+  .container{width:90%;min-width:0}
+}
 .auth-layout{display:flex;min-height:100vh;background:linear-gradient(135deg,#ffffff,#ecfdf5)}
 .auth-aside{flex:1;display:flex;align-items:center;justify-content:center;padding:48px;background:radial-gradient(1000px 500px at -10% -10%,#bbf7d0 0,#ffffff00 70%),radial-gradient(800px 400px at 110% 110%,#a7f3d0 0,#ffffff00 70%)}
 .auth-aside h1{font-size:48px;margin:0 0 16px;color:#065f46}

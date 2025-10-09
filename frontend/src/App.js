@@ -20,6 +20,8 @@ import ApplyJob from './pages/ApplyJob.jsx';
 import AppliedJobs from './pages/AppliedJobs.jsx';
 import JobApplications from './pages/JobApplications.jsx';
 import Chat from './pages/Chat.jsx';
+import Interview from './pages/Interview.jsx';
+import ResumeScorer from './pages/ResumeScorer.jsx';
 
 export default function App(){
 	return (
@@ -42,6 +44,8 @@ export default function App(){
 				<Route path="/dashboard/applied-jobs" element={<AppliedJobs />} />
 				<Route path="/dashboard/jobs/:id/applications" element={<JobApplications />} />
 				<Route path="/dashboard/chat" element={<Chat />} />
+				<Route path="/interview" element={<Interview />} />
+				<Route path="/dashboard/resume-scorer" element={<ResumeScorer />} />
 						<Route path="/p/:id" element={<PublicProfile />} />
 						<Route path="/dashboard/post" element={<CreatePost />} />
 						<Route path="/onboarding" element={<Onboarding />} />
