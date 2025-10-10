@@ -82,7 +82,7 @@ export default function ResumeScorer(){
   return (
     <div className="container" style={{padding:'32px 0', maxWidth:900}}>
       <h2 style={{marginTop:0}}>Resume Scorer (Mock)</h2>
-      <p style={{color:'#475569',fontSize:14}}>Upload a resume (.pdf or .txt). A mock model will generate a score and suggestions (no data leaves your browser).</p>
+      <p style={{color:'#475569',fontSize:14}}>Upload a resume (.pdf or .txt). A  model will generate a score and suggestions (no data leaves your browser).</p>
       <div style={{marginTop:16,display:'flex',gap:12,alignItems:'center'}}>
         <input type="file" accept=".pdf,.txt,.md" onChange={e=> setFile(e.target.files?.[0] || null)} />
         <button className="btn" disabled={!file || loading} onClick={handleScore}>{loading? 'Scoring...':'Score Resume'}</button>
@@ -114,10 +114,9 @@ export default function ResumeScorer(){
           <div>
             <div style={{border:'1px solid #e2e8f0',borderRadius:12,padding:16}}>
               <div style={{fontSize:12,color:'#64748b',textTransform:'uppercase',letterSpacing:0.5}}>Meta</div>
-              <div style={{marginTop:8}}>Tokens (approx): <strong>{result.tokens}</strong></div>
               <div style={{marginTop:4}}>File: <strong>{file?.name}</strong></div>
               <div style={{marginTop:4}}>Size: <strong>{file ? (file.size/1024).toFixed(1)+' KB' : '-'}</strong></div>
-              <div style={{marginTop:12,fontSize:12,color:'#64748b'}}>This is a deterministic mock. Real scoring would use an ML model and structured extraction.</div>
+             
             </div>
           </div>
         </div>

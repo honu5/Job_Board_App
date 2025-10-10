@@ -263,16 +263,7 @@ export default function Onboarding(){
                 <input placeholder="Logo URL" value={logoUrl} onChange={(e)=>setLogoUrl(e.target.value)} />
               </div>
               <div className="field"><label>About Company</label><textarea rows={4} style={{width:'100%',padding:12,borderRadius:10,border:'1px solid #94a3b8'}} value={aboutCompany} onChange={(e)=>setAboutCompany(e.target.value)} /></div>
-              <div className="field">
-                <label>Hiring needs</label>
-                {hiringNeeds.map((hn, i)=> (
-                  <div key={i} className="row">
-                    <input placeholder="Role title" value={hn.role} onChange={(e)=>setHiringNeeds(prev=>prev.map((x,idx)=>idx===i?{...x,role:e.target.value}:x))} />
-                    <input type="number" placeholder="Count" value={hn.count} onChange={(e)=>setHiringNeeds(prev=>prev.map((x,idx)=>idx===i?{...x,count:parseInt(e.target.value||'1')}:x))} />
-                  </div>
-                ))}
-                <div className="actions"><button type="button" className="btn secondary" onClick={()=>setHiringNeeds(prev=>[...prev,{role:'',count:1}])}>Add role</button></div>
-              </div>
+              
               <div className="field">
                 <label>Contact person</label>
                 <div className="row">

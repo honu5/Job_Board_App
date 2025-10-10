@@ -1,7 +1,7 @@
-      SDLC of Meera
+      SDLC of Kihlot
 
 1.Planning
-    *Goal-Create a web-based Fullstack E-commerce application system that allows users to look on different sorts of clothes and dressings there and  make informative and rational decision after visiting the whole market just with their phone.It is an app thAT makes the life pf user easier and trustworthy. Boutiqe Owners can manage postings of commerce tools,update and create the profile of their shop.
+    *Goal-Create a web-based Fullstack Job application system that allows users to look on different sorts of clothes and dressings there and  make informative and rational decision after visiting the whole market just with their phone.It is an app thAT makes the life pf user easier and trustworthy. Boutiqe Owners can manage postings of commerce tools,update and create the profile of their shop.
     *Scope: Online E-commerce with applicant accounts(user),Busstation profile and dashbpard dashboard and  admin dashboard.
     *Problems it solves:--information gap between user and seller.reduce cost which was spent on searching jobs on magazines ,bulletin boards,and frequent visits to office
     *Timeline:Max of 1 months

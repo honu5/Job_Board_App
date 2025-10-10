@@ -1,16 +1,14 @@
 import { prisma } from './db.js';
 
 async function main() {
-  // Delete child tables first
   await prisma.profile.deleteMany({});
   await prisma.application.deleteMany({});
   await prisma.revokedToken.deleteMany({});
   await prisma.client.deleteMany({});
 
-  // Then delete parent tables
   await prisma.user.deleteMany({});
 
-  console.log("✅ Database cleaned!");
+  console.log(" Database cleaned!");
 }
 
 main()

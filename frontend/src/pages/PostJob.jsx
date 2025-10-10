@@ -145,8 +145,8 @@ setSkillOptions(data.skills || []);
               <input type="number" min="1" value={hoursPerWeek} onChange={e=>setHoursPerWeek(e.target.value)} style={{width:'100%',padding:12,borderRadius:10,border:'1px solid #94a3b8'}} />
             </div>
             <div>
-              <div style={{fontSize:12, color:'#16a34a', textTransform:'uppercase'}}>Compensation (optional)</div>
-              <input value={salaryRange} onChange={e=>setSalaryRange(e.target.value)} placeholder="$2k-$4k or hourly" style={{width:'100%',padding:12,borderRadius:10,border:'1px solid #94a3b8'}} />
+              <div style={{fontSize:12, color:'#16a34a', textTransform:'uppercase'}}>Compensation/salary (optional)</div>
+              <input value={salaryRange} onChange={e=>setSalaryRange(e.target.value)} placeholder="Please put the salary in Birr" style={{width:'100%',padding:12,borderRadius:10,border:'1px solid #94a3b8'}} />
             </div>
             <div>
               <div style={{fontSize:12, color:'#16a34a', textTransform:'uppercase'}}>Application limit (optional)</div>

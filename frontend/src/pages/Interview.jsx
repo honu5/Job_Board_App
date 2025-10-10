@@ -64,7 +64,7 @@ export default function Interview(){
             </ul>
           </div>
           <div style={{border:'2px dashed #16a34a',borderRadius:16,padding:20,background:'#f0fdf4'}}>
-            <h4 style={{margin:'0 0 8px'}}>Upcoming Features 🚀</h4>
+            <h4 style={{margin:'0 0 8px'}}>Upcoming Features</h4>
             <ul style={{margin:0,paddingLeft:18,lineHeight:1.5,fontSize:14,color:'#065f46'}}>
               <li>Live Meet integration</li>
               <li>Automatic transcript & keyword insights</li>

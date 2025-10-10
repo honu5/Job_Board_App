@@ -36,10 +36,9 @@ export default function PublicProfile(){
     })();
   },[id]);
 
-  if (error) return <div className="container"><p>{error}</p></div>;
-  if (!user) return <div className="container"><p>Loading...</p></div>;
+  
 
-  const r = user.role || 'USER';
+  const r = user?.role || 'USER';
   const apiBase = (api?.defaults?.baseURL) || '';
   const apiOrigin = apiBase.replace(/\/?api\/?$/, '');
   const videoUrl = useMemo(()=>{
@@ -56,6 +55,13 @@ export default function PublicProfile(){
       <div>{children}</div>
     </div>
   );
+
+  
+
+  if (error) return <div className="container"><p>{error}</p></div>;
+  if (!user) return <div className="container"><p>Loading...</p></div>;
+
+  
 
   const List = ({title, items, render}) => {
     if (!Array.isArray(items) || !items.length) return null;
